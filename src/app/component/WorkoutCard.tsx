@@ -1,9 +1,10 @@
-import React from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Typography, Body, Caption } from "./Typography";
-import { colors, spacing } from "@/theme";
-import type { Workout } from "@/types";
+import React from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { colors } from "../theme/colors";
+import { spacing } from "../theme/spacing";
+import type { Workout } from "../types/index";
+import { Body, Caption, Typography } from "./Typography";
 
 interface WorkoutCardProps {
   workout: Workout;

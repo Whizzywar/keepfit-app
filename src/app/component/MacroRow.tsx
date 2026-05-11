@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ProgressBar } from "./ProgressBar";
-import { colors, typography } from "@/theme";
+import { colors } from "../theme/colors";
+import { typography } from "../theme/typography";
 
 interface MacroRowProps {
   label: string;

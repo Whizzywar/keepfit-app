@@ -1,4 +1,4 @@
-import { DailyLog, Workout } from "@/types";
+import { DailyLog, Workout } from "../types";
 
 export const dailyLogs: DailyLog[] = [
   {

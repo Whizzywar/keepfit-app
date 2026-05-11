@@ -1,18 +1,20 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  View,
-  Text,
   ScrollView,
-  TouchableOpacity,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { colors, typography, spacing } from "@/theme";
-import { sharedStyles } from "@/styles/shared";
-import { ProgressBar } from "@/components/ProgressBar";
-import { workouts } from "@/data/mockData";
-import type { Workout } from "@/types";
+import { ProgressBar } from "../component/ProgressBar";
+import { sharedStyles } from "../styles/shared";
+import { colors } from "../theme/colors";
+import { spacing } from "../theme/spacing";
+import { typography } from "../theme/typography";
+
+import type { Workout } from "../types/index";
 
 export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<

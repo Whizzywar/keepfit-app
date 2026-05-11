@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, typography, spacing } from "@/theme";
-import { sharedStyles } from "@/styles/shared";
-import { ProgressBar } from "@/components/ProgressBar";
-import { MacroRow } from "@/components/MacroRow";
-import { dailyLogs } from "@/data/mockData";
+import { colors } from "../theme/colors";
+import { typography } from "../theme/typography";
+import { spacing } from "../theme/spacing";
+import { sharedStyles } from "../styles/shared";
+import { ProgressBar } from "../component/ProgressBar";
+import { MacroRow } from "../component/MacroRow";
+import { dailyLogs } from "../data/mockData";
 
 export default function NutritionScreen() {
   const [water, setWater] = useState(1.2);

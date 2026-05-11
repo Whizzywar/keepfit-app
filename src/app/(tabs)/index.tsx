@@ -1,9 +1,12 @@
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors, typography, spacing } from "@/theme";
-import { sharedStyles } from "@/styles/shared";
-import { useWorkout } from "@/contexts/WorkoutContext";
-import { workouts } from "@/data/mockData";
+import { colors } from "../theme/colors";
+import { typography } from "../theme/typography";
+import { spacing } from "../theme/spacing";
+
+import { sharedStyles } from "../styles/shared";
+import { useWorkout } from "../context/WorkoutContext";
+import { workouts } from "../data/mockData";
 
 export default function HomeScreen() {
   const { currentStreak } = useWorkout();

@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { colors } from "./colors";
 
 export const typography = StyleSheet.create({
   title1: { fontSize: 28, fontWeight: "bold", color: colors.text },
