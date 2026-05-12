@@ -1,11 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useWorkout } from "@/context/WorkoutContext";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../theme/colors";
-import { typography } from "../theme/typography";
-import { spacing } from "../theme/spacing";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { sharedStyles } from "../styles/shared";
-import { useWorkout } from "../context/WorkoutContext";
+import { colors } from "../theme/colors";
+import { spacing } from "../theme/spacing";
+import { typography } from "../theme/typography";
 
 export default function ProfileScreen() {
   const { currentStreak } = useWorkout();

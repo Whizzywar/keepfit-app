@@ -5,11 +5,11 @@ import { typography } from "../theme/typography";
 import { spacing } from "../theme/spacing";
 
 import { sharedStyles } from "../styles/shared";
-import { useWorkout } from "../context/WorkoutContext";
 import { workouts } from "../data/mockData";
 
 export default function HomeScreen() {
-  const { currentStreak } = useWorkout();
+  // const { currentStreak } = useWorkout();
+  const currentStreak = 5; // demo
   const inProgressWorkout = workouts[0]; // demo
 
   return (
