@@ -14,7 +14,7 @@ import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 
-import type { Workout } from "../types/index";
+import { Workout } from "../types/index";
 
 export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<
