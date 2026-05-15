@@ -8,13 +8,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ProgressBar } from "../component/ProgressBar";
-import { sharedStyles } from "../styles/shared";
-import { colors } from "../theme/colors";
-import { spacing } from "../theme/spacing";
-import { typography } from "../theme/typography";
+import { ProgressBar } from "../../component/ProgressBar";
+import { sharedStyles } from "../../styles/shared";
+import { colors } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
-import { Workout } from "../types/index";
+import { Workout } from "../../types/index";
 
 export default function WorkoutsScreen() {
   const [selectedTab, setSelectedTab] = useState<

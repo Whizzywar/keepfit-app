@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Workout } from "@/app/types";
+import { Workout } from "@/types";
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 interface WorkoutContextType {
   activeWorkout: Workout | null;

@@ -1,15 +1,15 @@
 import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../theme/colors";
+import { colors } from "../../theme/colors";
 
-import { useWorkout } from "@/context/WorkoutContext"; // ✅ import the hook
-import { ProgressBar } from "../component/ProgressBar";
-import { Body, Caption, Title1, Title2 } from "../component/Typography";
-import { WorkoutCard } from "../component/WorkoutCard";
-import { workouts } from "../data/mockData";
-import { sharedStyles } from "../styles/shared";
-import { spacing } from "../theme/spacing";
-import { MacroRow } from "../component/MacroRow";
+import { MacroRow } from "../../component/MacroRow";
+import { ProgressBar } from "../../component/ProgressBar";
+import { Body, Caption, Title1, Title2 } from "../../component/Typography";
+import { WorkoutCard } from "../../component/WorkoutCard";
+import { useWorkout } from "../../context/WorkoutContext"; // ✅ import the hook
+import { workouts } from "../../data/mockData";
+import { sharedStyles } from "../../styles/shared";
+import { spacing } from "../../theme/spacing";
 
 export default function HomeScreen() {
   // ✅ Use real context – no more hardcoded demo value

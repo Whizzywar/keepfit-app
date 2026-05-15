@@ -2,10 +2,10 @@ import { useWorkout } from "@/context/WorkoutContext";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { sharedStyles } from "../styles/shared";
-import { colors } from "../theme/colors";
-import { spacing } from "../theme/spacing";
-import { typography } from "../theme/typography";
+import { sharedStyles } from "../../styles/shared";
+import { colors } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
 
 export default function ProfileScreen() {
   const { currentStreak } = useWorkout();

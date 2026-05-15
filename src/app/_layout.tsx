@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
-import { WorkoutProvider } from "../context/WorkoutContext";
 import { StatusBar } from "expo-status-bar";
+import { WorkoutProvider } from "../context/WorkoutContext";
 
 export default function RootLayout() {
   return (
