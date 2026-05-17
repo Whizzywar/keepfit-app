@@ -6,27 +6,24 @@ import { MacroRow } from "../../component/MacroRow";
 import { ProgressBar } from "../../component/ProgressBar";
 import { Body, Caption, Title1, Title2 } from "../../component/Typography";
 import { WorkoutCard } from "../../component/WorkoutCard";
-import { useWorkout } from "../../context/WorkoutContext"; // ✅ import the hook
+import { useWorkout } from "../../context/WorkoutContext"; //
 import { workouts } from "../../data/mockData";
 import { sharedStyles } from "../../styles/shared";
 import { spacing } from "../../theme/spacing";
 
 export default function HomeScreen() {
-  // ✅ Use real context – no more hardcoded demo value
   const { currentStreak } = useWorkout();
-  const inProgressWorkout = workouts[0]; // still using mock data for demo
+  const inProgressWorkout = workouts[0];
 
   return (
     <SafeAreaView style={sharedStyles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={{ padding: spacing.lg }}>
-          {/* ✅ Typography components instead of raw Text */}
-          <Title1>Good morning, Alex</Title1>
+          <Title1>Good morning, Whizzy</Title1>
           <Caption style={{ marginBottom: spacing.md }}>
             Ready to push your limits today?
           </Caption>
 
-          {/* ✅ In Progress Workout – using WorkoutCard */}
           <WorkoutCard
             workout={inProgressWorkout}
             isActive={true}

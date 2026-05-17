@@ -12,7 +12,7 @@ export default function TabsLayout() {
           borderTopWidth: 0,
           height: 60,
         },
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.secondary,
         tabBarInactiveTintColor: colors.textSecondary,
       }}
     >
