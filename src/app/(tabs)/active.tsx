@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { ResizeMode, Video } from "expo-av";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Image,
   Modal,
@@ -12,90 +12,120 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ProgressBar } from "../../component/ProgressBar";
+import {
+  ExerciseData,
+  getExerciseByName,
+} from "../../services/exerciseService";
 import { sharedStyles } from "../../styles/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
-const EXERCISES = [
-  {
-    name: "Jumping Jacks",
-    duration: 45,
-    sets: 3,
-    muscle: "Full Body",
-    image:
-      "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4", // replace with real exercise video URL
-    tips: "Keep arms fully extended overhead. Land softly on the balls of your feet.",
-  },
-  {
-    name: "Forearm Plank",
-    duration: 60,
-    sets: 2,
-    muscle: "Core",
-    image:
-      "https://images.unsplash.com/photo-1566241142559-40e1dab266c6?w=400&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-    tips: "Keep hips level. Don't let your lower back sag. Breathe steadily.",
-  },
-  {
-    name: "Push-Ups",
-    duration: 40,
-    sets: 3,
-    muscle: "Chest · Triceps",
-    image:
-      "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?w=400&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-    tips: "Lower chest to just above the floor. Keep elbows at 45°. Full extension at top.",
-  },
-  {
-    name: "Mountain Climbers",
-    duration: 30,
-    sets: 3,
-    muscle: "Core · Cardio",
-    image:
-      "https://images.unsplash.com/photo-1601422407692-ec4eeec1d9b3?w=400&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-    tips: "Keep hips low and level. Drive knees toward chest at a steady pace.",
-  },
-  {
-    name: "Burpees",
-    duration: 45,
-    sets: 2,
-    muscle: "Full Body",
-    image:
-      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=400&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-    tips: "Explode upward on the jump. Land with soft knees. Keep core tight throughout.",
-  },
+// src/app/(tabs)/active.tsx
+
+// ✅ These are real ExerciseDB gym exercise names
+const EXERCISE_CONFIG = [
+  // Chest
+  { name: "barbell bench press", duration: 45, sets: 4, rest: 60 },
+  // Back
+  { name: "pull up", duration: 40, sets: 3, rest: 60 },
+  // Shoulders
+  { name: "barbell overhead press", duration: 45, sets: 3, rest: 60 },
+  // Biceps
+  { name: "barbell curl", duration: 40, sets: 3, rest: 45 },
+  // Triceps
+  { name: "triceps dip", duration: 40, sets: 3, rest: 45 },
+  // Upper legs
+  { name: "barbell squat", duration: 50, sets: 4, rest: 90 },
+  // Lower legs
+  { name: "standing calf raises", duration: 35, sets: 3, rest: 45 },
+  // Waist / core
+  { name: "decline crunch", duration: 40, sets: 3, rest: 30 },
 ];
 
+type Exercise = ExerciseData & {
+  duration: number;
+  sets: number;
+};
+
 export default function ActiveScreen() {
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [curIndex, setCurIndex] = useState(0);
   const [currentSet, setCurrentSet] = useState(1);
-  const [timeLeft, setTimeLeft] = useState(EXERCISES[0].duration);
-  const [isActive, setIsActive] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(EXERCISE_CONFIG[0].duration);
+  const [isActive, setIsActive] = useState(false); // start paused until loaded
   const [kcal, setKcal] = useState(124);
   const [bpm, setBpm] = useState(142);
-  const [elapsedTotal, setElapsedTotal] = useState(130);
+  const [elapsedTotal, setElapsedTotal] = useState(0);
   const [showTips, setShowTips] = useState(false);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
-  const [videoError, setVideoError] = useState(false);
 
-  const videoRef = useRef<Video>(null);
-  const modalVideoRef = useRef<Video>(null);
   const heartAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const exercise = EXERCISES[curIndex];
-  const totalTime = exercise.duration;
+  const exercise = exercises[curIndex];
+  const config = EXERCISE_CONFIG[curIndex];
+  const totalTime = config?.duration ?? 45;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
   const overallProgress =
-    (curIndex * 100) / EXERCISES.length + progress / EXERCISES.length;
+    (curIndex * 100) / EXERCISE_CONFIG.length +
+    progress / EXERCISE_CONFIG.length;
 
-  // Fade in when exercise changes
+  // Fetch all exercises from ExerciseDB on mount
+
   useEffect(() => {
-    setVideoError(false);
+    const fetchAll = async () => {
+      setLoading(true);
+      setFetchError(false);
+      try {
+        const results = await Promise.all(
+          EXERCISE_CONFIG.map(async (cfg) => {
+            let data = await getExerciseByName(cfg.name);
+
+            // ✅ Fallback: if exact name fails, search broadly
+            if (!data) {
+              console.warn(`Trying broad search for: "${cfg.name}"`);
+              const broad = await fetch(
+                `https://exercisedb.p.rapidapi.com/exercises/name/${encodeURIComponent(cfg.name.split(" ")[0])}?limit=1`,
+                {
+                  headers: {
+                    "X-RapidAPI-Key": "",
+                    "X-RapidAPI-Host": "exercisedb.p.rapidapi.com",
+                  },
+                },
+              ).then((r) => r.json());
+              data = broad[0] ?? null;
+            }
+
+            if (!data)
+              throw new Error(`Could not find exercise: "${cfg.name}"`);
+
+            return {
+              ...data,
+              duration: cfg.duration,
+              sets: cfg.sets,
+              rest: cfg.rest,
+            };
+          }),
+        );
+
+        setExercises(results);
+        setTimeLeft(results[0].duration);
+        setIsActive(true);
+      } catch (err) {
+        console.error("Failed to load exercises:", err);
+        setFetchError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, []);
+
+  // Fade in on exercise change
+  useEffect(() => {
     fadeAnim.setValue(0);
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -126,6 +156,7 @@ export default function ActiveScreen() {
 
   // Countdown timer
   useEffect(() => {
+    if (loading) return;
     let interval: NodeJS.Timeout | undefined;
     if (isActive && timeLeft > 0) {
       interval = setInterval(() => {
@@ -134,24 +165,17 @@ export default function ActiveScreen() {
         setKcal((p) => p + 0.3);
         setBpm(138 + Math.round(Math.sin(Date.now() / 2000) * 8));
       }, 1000);
-    } else if (timeLeft === 0) {
+    } else if (!loading && timeLeft === 0) {
       handleCompleteSet();
     }
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
-
-  // Pause/resume video when workout pauses
-  useEffect(() => {
-    if (videoRef.current) {
-      isActive ? videoRef.current.playAsync() : videoRef.current.pauseAsync();
-    }
-  }, [isActive]);
+  }, [isActive, timeLeft, loading]);
 
   const fmt = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const handleCompleteSet = () => {
-    if (currentSet < exercise.sets) {
+    if (exercise && currentSet < exercise.sets) {
       setCurrentSet((p) => p + 1);
       setTimeLeft(totalTime);
     } else {
@@ -160,70 +184,103 @@ export default function ActiveScreen() {
   };
 
   const handleSkip = () => {
-    if (curIndex < EXERCISES.length - 1) {
+    if (curIndex < exercises.length - 1) {
       const next = curIndex + 1;
       setCurIndex(next);
       setCurrentSet(1);
-      setTimeLeft(EXERCISES[next].duration);
+      setTimeLeft(exercises[next].duration);
     }
   };
 
-  const toggleVideoPlay = async () => {
-    if (!videoRef.current) return;
-    if (isVideoPlaying) {
-      await videoRef.current.pauseAsync();
-    } else {
-      await videoRef.current.playAsync();
-    }
-    setIsVideoPlaying((p) => !p);
-  };
+  // Loading state
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={[
+          sharedStyles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.accent} />
+        <Text
+          style={{
+            color: colors.secondary,
+            marginTop: spacing.md,
+            letterSpacing: 1,
+          }}
+        >
+          LOADING EXERCISES...
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (fetchError || exercises.length === 0) {
+    return (
+      <SafeAreaView
+        style={[
+          sharedStyles.container,
+          {
+            justifyContent: "center",
+            alignItems: "center",
+            padding: spacing.xl,
+          },
+        ]}
+      >
+        <Ionicons
+          name="cloud-offline-outline"
+          size={48}
+          color={colors.secondary}
+        />
+        <Text
+          style={[
+            typography.headline,
+            { textAlign: "center", marginTop: spacing.md },
+          ]}
+        >
+          Failed to load exercises
+        </Text>
+        <Text
+          style={{
+            color: colors.secondary,
+            textAlign: "center",
+            marginTop: spacing.sm,
+          }}
+        >
+          Check your API key or internet connection
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={sharedStyles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Video Hero */}
+        {/* GIF Hero — replaces Video/Image hero */}
         <Animated.View style={{ opacity: fadeAnim }}>
           <View
             style={{
               position: "relative",
-              height: 240,
+              height: 260,
               backgroundColor: colors.surface,
             }}
           >
-            {!videoError ? (
-              <Video
-                ref={videoRef}
-                source={{ uri: exercise.video }}
-                style={{ width: "100%", height: 240 }}
-                resizeMode={ResizeMode.COVER}
-                isLooping
-                shouldPlay={isActive}
-                isMuted={false}
-                onError={() => setVideoError(true)}
-                onPlaybackStatusUpdate={(status) => {
-                  if (status.isLoaded) {
-                    setIsVideoPlaying(status.isPlaying);
-                  }
-                }}
-              />
-            ) : (
-              // Fallback to image if video fails
-              <Image
-                source={{ uri: exercise.image }}
-                style={{ width: "100%", height: 240 }}
-                resizeMode="cover"
-              />
-            )}
+            <Image
+              source={{ uri: exercise.gifUrl }}
+              style={{ width: "100%", height: 260 }}
+              resizeMode="cover"
+            />
 
-            {/* Overlay */}
+            {/* Dark overlay */}
             <View
               style={{
                 position: "absolute",
                 bottom: 0,
                 left: 0,
                 right: 0,
-                height: 120,
-                backgroundColor: "rgba(0,0,0,0.5)",
+                height: 130,
+                backgroundColor: "rgba(0,0,0,0.55)",
                 justifyContent: "flex-end",
                 padding: spacing.md,
               }}
@@ -249,8 +306,9 @@ export default function ActiveScreen() {
                   <Text
                     style={[typography.title1, { color: "#fff", marginTop: 2 }]}
                   >
-                    {exercise.name}
+                    {exercise.name.replace(/\b\w/g, (c) => c.toUpperCase())}
                   </Text>
+                  {/* Live API data — target + body part */}
                   <Text
                     style={{
                       color: "rgba(255,255,255,0.6)",
@@ -258,46 +316,27 @@ export default function ActiveScreen() {
                       marginTop: 2,
                     }}
                   >
-                    {exercise.muscle}
+                    {exercise.target} · {exercise.bodyPart} ·{" "}
+                    {exercise.equipment}
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: "row", gap: spacing.sm }}>
-                  {/* Play/Pause video button */}
-                  {!videoError && (
-                    <TouchableOpacity
-                      onPress={toggleVideoPlay}
-                      style={{
-                        backgroundColor: "rgba(255,255,255,0.15)",
-                        borderRadius: 20,
-                        padding: 8,
-                      }}
-                    >
-                      <Ionicons
-                        name={isVideoPlaying ? "pause" : "play"}
-                        size={16}
-                        color="#fff"
-                      />
-                    </TouchableOpacity>
-                  )}
-
-                  {/* Tips button */}
-                  <TouchableOpacity
-                    onPress={() => setShowTips(true)}
-                    style={{
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      borderRadius: 20,
-                      paddingHorizontal: spacing.md,
-                      paddingVertical: 6,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    <Ionicons name="bulb-outline" size={14} color="#fff" />
-                    <Text style={{ color: "#fff", fontSize: 12 }}>Tips</Text>
-                  </TouchableOpacity>
-                </View>
+                {/* Tips button */}
+                <TouchableOpacity
+                  onPress={() => setShowTips(true)}
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.15)",
+                    borderRadius: 20,
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: 6,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <Ionicons name="bulb-outline" size={14} color="#fff" />
+                  <Text style={{ color: "#fff", fontSize: 12 }}>Tips</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -474,7 +513,7 @@ export default function ActiveScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Queue with thumbnails */}
+          {/* Queue with GIF thumbnails */}
           <Text
             style={{
               color: colors.secondary,
@@ -485,9 +524,9 @@ export default function ActiveScreen() {
           >
             COMING UP
           </Text>
-          {EXERCISES.slice(curIndex + 1, curIndex + 4).map((ex, i) => (
+          {exercises.slice(curIndex + 1, curIndex + 4).map((ex, i) => (
             <View
-              key={ex.name}
+              key={ex.id}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -500,9 +539,10 @@ export default function ActiveScreen() {
                 borderColor: i === 0 ? colors.accent + "44" : "transparent",
               }}
             >
+              {/* GIF thumbnail from API */}
               <View style={{ borderRadius: 10, overflow: "hidden" }}>
                 <Image
-                  source={{ uri: ex.image }}
+                  source={{ uri: ex.gifUrl }}
                   style={{ width: 56, height: 56 }}
                   resizeMode="cover"
                 />
@@ -514,7 +554,7 @@ export default function ActiveScreen() {
                     fontWeight: "500",
                   }}
                 >
-                  {ex.name}
+                  {ex.name.replace(/\b\w/g, (c) => c.toUpperCase())}
                 </Text>
                 <Text
                   style={{
@@ -523,7 +563,7 @@ export default function ActiveScreen() {
                     marginTop: 2,
                   }}
                 >
-                  {ex.muscle} · {ex.sets} sets · {fmt(ex.duration)}
+                  {ex.target} · {ex.sets} sets · {fmt(ex.duration)}
                 </Text>
               </View>
               {i === 0 && (
@@ -551,7 +591,7 @@ export default function ActiveScreen() {
         </View>
       </ScrollView>
 
-      {/* Tips Modal with video */}
+      {/* Tips Modal — instructions from API */}
       <Modal visible={showTips} transparent animationType="slide">
         <View
           style={{
@@ -566,6 +606,7 @@ export default function ActiveScreen() {
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               padding: spacing.xl,
+              maxHeight: "85%",
             }}
           >
             <View
@@ -584,10 +625,60 @@ export default function ActiveScreen() {
             </View>
 
             <Text style={[typography.title2, { marginBottom: spacing.sm }]}>
-              {exercise.name}
+              {exercise.name.replace(/\b\w/g, (c) => c.toUpperCase())}
             </Text>
 
-            {/* Video in modal */}
+            {/* Muscle info pills from API */}
+            <View
+              style={{
+                flexDirection: "row",
+                gap: 6,
+                flexWrap: "wrap",
+                marginBottom: spacing.md,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: colors.accent + "22",
+                  borderRadius: 20,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                }}
+              >
+                <Text style={{ color: colors.accent, fontSize: 11 }}>
+                  🎯 {exercise.target}
+                </Text>
+              </View>
+              {exercise.secondaryMuscles.slice(0, 2).map((m) => (
+                <View
+                  key={m}
+                  style={{
+                    backgroundColor: colors.card,
+                    borderRadius: 20,
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                  }}
+                >
+                  <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                    {m}
+                  </Text>
+                </View>
+              ))}
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderRadius: 20,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                }}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                  🏋️ {exercise.equipment}
+                </Text>
+              </View>
+            </View>
+
+            {/* GIF in modal */}
             <View
               style={{
                 borderRadius: 16,
@@ -595,20 +686,62 @@ export default function ActiveScreen() {
                 marginBottom: spacing.md,
               }}
             >
-              <Video
-                ref={modalVideoRef}
-                source={{ uri: exercise.video }}
+              <Image
+                source={{ uri: exercise.gifUrl }}
                 style={{ width: "100%", height: 200 }}
-                resizeMode={ResizeMode.COVER}
-                isLooping
-                shouldPlay
-                isMuted
+                resizeMode="contain"
               />
             </View>
 
-            <Text style={{ color: colors.text, lineHeight: 22, fontSize: 15 }}>
-              {exercise.tips}
-            </Text>
+            {/* Step-by-step instructions from API */}
+            <ScrollView
+              style={{ maxHeight: 200 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {exercise.instructions.map((step, i) => (
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    gap: spacing.sm,
+                    alignItems: "flex-start",
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: colors.accent + "22",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: colors.accent,
+                        fontSize: 11,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {i + 1}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      color: colors.text,
+                      lineHeight: 22,
+                      flex: 1,
+                      fontSize: 14,
+                    }}
+                  >
+                    {step}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
 
             <TouchableOpacity
               onPress={() => setShowTips(false)}
